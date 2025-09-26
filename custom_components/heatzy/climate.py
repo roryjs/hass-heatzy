@@ -63,6 +63,7 @@ from .const import (
     PRESET_COMFORT_2,
     PRESET_PRESENCE_DETECT,
     PRESET_VACATION,
+    SHINE
 )
 from .entity import HeatzyEntity
 
@@ -282,6 +283,45 @@ CLIMATE_TYPES: Final[tuple[HeatzyClimateEntityDescription, ...]] = (
             PRESET_COMFORT_1,
             PRESET_COMFORT_2,
         ],
+        supported_features=(
+            ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        ),
+        heatzy_to_ha_state={
+            "cft": PRESET_COMFORT,
+            "eco": PRESET_ECO,
+            "fro": PRESET_AWAY,
+            "cft1": PRESET_COMFORT_1,
+            "cft2": PRESET_COMFORT_2,
+            "stop": PRESET_NONE,
+        },
+        ha_to_heatzy_state={
+            PRESET_COMFORT: "cft",
+            PRESET_ECO: "eco",
+            PRESET_AWAY: "fro",
+            PRESET_COMFORT_1: "cft1",
+            PRESET_COMFORT_2: "cft2",
+            PRESET_NONE: "stop",
+        },
+        current_temperature=CONF_CUR_TEMP,
+        temperature_high=CONF_CFT_TEMP,
+        temperature_low=CONF_ECO_TEMP,
+        target_temperature_step=0.1,
+    ),
+    HeatzyClimateEntityDescription(
+        key="shine",
+        translation_key="shine",
+        products=SHINE,
+        preset_modes=[
+            PRESET_COMFORT,
+            PRESET_ECO,
+            PRESET_AWAY,
+            PRESET_BOOST,
+            PRESET_VACATION,
+        ],
+        fn=lambda x, y, z: Shinev1Thermostat(x, y, z),
         supported_features=(
             ClimateEntityFeature.PRESET_MODE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -755,5 +795,47 @@ class HeatzyPiloteProV1(HeatzyPiloteV2Thermostat):
                     CONF_CFT_TEMP: int(temp_cft) * 10,
                     CONF_ECO_TEMP: int(temp_eco) * 10,
                 }
+            }
+            await self._handle_action(config, "Error to set temperature")
+
+class Shinev1Thermostat(HeatzyPiloteV2Thermostat):
+    """Bloom."""
+
+    @property
+    def current_temperature(self) -> float:
+        """Return current temperature."""
+        return self._attrs.get(self.entity_description.current_temperature)
+
+    @property
+    def target_temperature_high(self) -> float:
+        """Return comfort temperature."""
+        return self._attrs.get(self.entity_description.temperature_high)
+
+    @property
+    def target_temperature_low(self) -> float:
+        """Return echo temperature."""
+        return self._attrs.get(self.entity_description.temperature_low)
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return target temperature for mode."""
+        # Target temp is set to value according to the current [preset] mode
+        if self.hvac_mode == HVACMode.OFF:
+            return None
+        if self.preset_mode == PRESET_ECO:
+            return self.target_temperature_low
+        if self.preset_mode == PRESET_COMFORT:
+            return self.target_temperature_high
+        if self.preset_mode == PRESET_AWAY:
+            return FROST_TEMP
+        return None
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (temp_eco := kwargs.get(ATTR_TARGET_TEMP_LOW)) and (
+            temp_cft := kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        ):
+            config = {
+                CONF_ATTRS: {CONF_CFT_TEMP: int(temp_cft), CONF_ECO_TEMP: int(temp_eco)}
             }
             await self._handle_action(config, "Error to set temperature")

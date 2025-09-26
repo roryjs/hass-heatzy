@@ -63,6 +63,7 @@ GLOW = [
     "fc89066ee74c4149a9beb37d4ea93604",  # INEA
 ]
 BLOOM = ["480253852d574f11b2d7fbf4460d7a41"]  # BLOOM
+SHINE = ["2884feb88e0b4f30b75ea5572276a102"]  # SHINE
 
 # -- Not integrated --
 # FLAM "f71ee820660f4f358db8b8a474689726"
