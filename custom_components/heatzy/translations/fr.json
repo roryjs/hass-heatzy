@@ -19,12 +19,36 @@
       "already_configured": "Votre compte est déjà enregistré."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "websocket_feature": "Activer le mode websocket"
+  "services": {
+    "boost": {
+      "description": "Paramètre le mode boost",
+      "fields": {
+        "delay": {
+          "name": "Délais",
+          "description": "Choisir une valeur"
         }
+      }
+    },
+    "vacation": {
+      "description": "Paramètre le mode vacance",
+      "fields": {
+        "delay": {
+          "name": "Délais",
+          "description": "Choisir une valeur"
+        }
+      }
+    },
+    "presence": {
+      "description": "Paramètre le mode présence"
+    },
+    "window_switch": {
+      "description": "Paramètre le mode switch"
+    }
+  },
+  "selector": {
+    "vacation_mode": {
+      "unit_of_measurement": {
+        "days": "jours"
       }
     }
   }

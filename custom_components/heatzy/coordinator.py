@@ -26,14 +26,18 @@ class HeatzyDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Class to manage fetching Heatzy data API."""
+        self.entry = entry
         self.unsub: CALLBACK_TYPE | None = None
-        self.api = HeatzyClient(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            async_create_clientsession(hass),
-        )
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=SCAN_INTERVAL)
+        )
+
+    async def _async_setup(self) -> None:
+        """Coordinator setup."""
+        self.api = HeatzyClient(
+            self.entry.data[CONF_USERNAME],
+            self.entry.data[CONF_PASSWORD],
+            async_create_clientsession(self.hass),
         )
 
     @callback
@@ -79,7 +83,7 @@ class HeatzyDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         # Start listening
-        self.config_entry.async_create_background_task(
+        self.entry.async_create_background_task(
             self.hass, async_listener(), "heatzy-listen"
         )
 

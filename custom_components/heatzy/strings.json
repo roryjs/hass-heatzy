@@ -19,13 +19,33 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "websocket_feature": "Enable websocket feature"
+  "services": {
+    "boost": {
+      "name": "Set Boost",
+      "description": "Setting boost mode",
+      "fields": {
+        "delay": {
+          "name": "Delay",
+          "description": "Boost delay (minutes)"
         }
       }
+    },
+    "vacation": {
+      "name": "Set Vacation",
+      "description": "Setting vacation mode",
+      "fields": {
+        "delay": {
+          "name": "Delay",
+          "description": "Vacation delay (days)"
+        }
+      }
+    },
+    "presence": {
+      "name": "Set Presence"
+    },
+    "window_switch": {
+      "name": "Set Window Switch",
+      "description": "Setting window switch mode"
     }
   }
 }

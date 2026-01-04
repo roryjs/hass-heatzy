@@ -1,10 +1,9 @@
-"""Sensors for Heatzy."""
+"""Switch for Heatzy."""
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
-from typing import Final
+from typing import Any, Final
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -16,7 +15,7 @@ from .const import CONF_ATTRS, CONF_LOCK, CONF_LOCK_OTHER, CONF_WINDOW
 from .entity import HeatzyEntity
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HeatzySwitchEntityDescription(SwitchEntityDescription):
     """Represents an Flow Sensor."""
 
@@ -48,7 +47,6 @@ SWITCH_TYPES: Final[tuple[HeatzySwitchEntityDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
     ),
 )
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -63,17 +61,22 @@ async def async_setup_entry(
     for unique_id, device in coordinator.data.items():
         for description in SWITCH_TYPES:
             if device.get(CONF_ATTRS, {}).get(description.attr) is not None:
-                entities.extend([SwitchEntity(coordinator, description, unique_id)])
+                entities.extend(
+                    [HeatzySwitchEntity(coordinator, description, unique_id)]
+                )
     async_add_entities(entities)
 
 
-class SwitchEntity(HeatzyEntity, SwitchEntity):
+class HeatzySwitchEntity(HeatzyEntity, SwitchEntity):
     """Switch."""
 
-    _attr_has_entity_name = True
+    entity_description: HeatzySwitchEntityDescription
 
     def __init__(
-        self, coordinator: HeatzyDataUpdateCoordinator, description, did: str
+        self,
+        coordinator: HeatzyDataUpdateCoordinator,
+        description: HeatzySwitchEntityDescription,
+        did: str,
     ) -> None:
         """Initialize switch."""
         super().__init__(coordinator, description, did)
@@ -83,14 +86,14 @@ class SwitchEntity(HeatzyEntity, SwitchEntity):
         """Return true if switch is on."""
         return self._attrs.get(self.entity_description.attr) == 1
 
-    async def async_turn_on(self) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         config = {CONF_ATTRS: {self.entity_description.attr: 1}}
         await self._handle_action(
             config, f"Error to turn on: {self.entity_description.key}"
         )
 
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         config = {CONF_ATTRS: {self.entity_description.attr: 0}}
         await self._handle_action(

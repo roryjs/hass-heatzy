@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from heatzypy import HeatzyException
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_ALIAS, CONF_ATTRS, CONF_MODEL, CONF_VERSION, DOMAIN
@@ -17,11 +18,11 @@ from .coordinator import HeatzyDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class HeatzyEntity(CoordinatorEntity[HeatzyDataUpdateCoordinator], Entity):
+class HeatzyEntity(CoordinatorEntity[HeatzyDataUpdateCoordinator]):
     """Base class for all entities."""
 
-    entity_description: EntityDescription
     _attr_has_entity_name = True
+    entity_description: EntityDescription
 
     def __init__(
         self,
@@ -45,7 +46,9 @@ class HeatzyEntity(CoordinatorEntity[HeatzyDataUpdateCoordinator], Entity):
         self._attrs = self._device.get(CONF_ATTRS, {})
         self.async_control_device = coordinator.api.websocket.async_control_device
 
-    async def _handle_action(self, config, error_msg: str = "Error unknown"):
+    async def _handle_action(
+        self, config: dict[str, Any], error_msg: str = "Error unknown"
+    ):
         """Execute action."""
         try:
             _LOGGER.debug("Handle action (%s): %s", self.device_id, config)
